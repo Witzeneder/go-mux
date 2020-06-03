@@ -122,6 +122,37 @@ func TestCreateProduct(t *testing.T) {
     }
 }
 
+func TestEmptyProduct(t *testing.T) {
+
+    clearTable()
+
+    var jsonStr = []byte(`{}`)
+    req, _ := http.NewRequest("POST", "/product", bytes.NewBuffer(jsonStr))
+    req.Header.Set("Content-Type", "application/json")
+
+    response := executeRequest(req)
+    checkResponseCode(t, http.StatusCreated, response.Code)
+
+    var m map[string]interface{}
+    json.Unmarshal(response.Body.Bytes(), &m)
+
+    //log.Println("JSON:", string(response.Body.Bytes()))
+
+    if m["name"] != "" {
+        t.Errorf("Expected product name to be ''. Got '%v'", m["name"])
+    }
+
+    if m["price"] != 0.00 {
+        t.Errorf("Expected product price to be '0'. Got '%v'", m["price"])
+    }
+
+    // the id is compared to 1.0 because JSON unmarshaling converts numbers to
+    // floats, when the target is a map[string]interface{}
+    if m["id"] != 1.0 {
+        t.Errorf("Expected product ID to be '1'. Got '%v'", m["id"])
+    }
+}
+
 
 func TestGetProduct(t *testing.T) {
     clearTable()
@@ -132,8 +163,6 @@ func TestGetProduct(t *testing.T) {
 
     checkResponseCode(t, http.StatusOK, response.Code)
 }
-
-// main_test.go
 
 func addProducts(count int) {
     if count < 1 {
